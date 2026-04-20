@@ -1,0 +1,37 @@
+name: Ingest CMS to Neon
+
+on:
+  workflow_dispatch:
+    inputs:
+      only_month:
+        description: "Load one month only, e.g. 2026-04 (blank = all)"
+        required: false
+        default: ""
+      start_year:
+        description: "Start year"
+        required: false
+        default: "2008"
+      end_year:
+        description: "End year (blank = current)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 12 15 * *"   # monthly, 15th at 12:00 UTC
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    environment: NEON_STRING
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Run ingest
+        env:
+          NEON_STRING: ${{ secrets.NEON_STRING }}
+          ONLY_MONTH:  ${{ inputs.only_month }}
+          START_YEAR:  ${{ inputs.start_year }}
+          END_YEAR:    ${{ inputs.end_year }}
+        run: python ingest.py
